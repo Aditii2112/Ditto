@@ -2,6 +2,98 @@
 
 A high-converting referral page for DITTO cycle supplements, built with Next.js 16, React 19, TypeScript, and Tailwind CSS v4. Integrates with Recharge's referral system via a Custom SDK approach.
 
+## Brief Responses (Audit / Build / Test)
+
+### 1) Audit — why the current page underperforms
+
+- **Commercial gaps**
+  - **Weak value framing**: the “mutual benefit” isn’t shown clearly side-by-side (friend gets discount, referrer earns credit).
+  - **Low trust & motivation**: minimal social proof and no visibility into “people like me are earning rewards”.
+  - **No momentum**: no reward dashboard or progress feedback loop to encourage repeat referrals.
+
+- **Structural / UX gaps**
+  - **High-friction gate**: asks for full registration immediately instead of letting existing subscribers share instantly.
+  - **Wall of text**: the “how it works” content is not progressive; users must parse everything at once.
+  - **Sharing isn’t one-click**: the primary action should be copy/share first, not a long form.
+  - **No progress state**: users can’t see steps like “Invite sent → Friend ordered → Reward earned”.
+
+- **Technical gaps**
+  - **Not integrated headlessly**: a widget/iframe approach can limit UI control and experimentation velocity.
+  - **No modular layer for Recharge**: without a service layer + typed contracts, swapping mock → live is harder and riskier.
+
+### 2) Build — what was built and why it fits Recharge migration
+
+- **Approach chosen**: Recharge **Custom SDK / API** style integration (headless UI in React/Next.js), instead of the native widget.
+  - **Why**: full brand control, better UX patterns (progressive disclosure, sticky visual, premium layout), and easier experimentation.
+
+- **Integration flow (mocked, ready for live handoff)**
+  - **Authentication**: identify subscriber via active Shopify session or email lookup (planned for live).
+  - **Data fetching**: `useRechargeReferral()` uses `useEffect` to fetch:
+    - `referral_code` (unique link)
+    - `reward_balance` / credits split into **available vs pending**
+    - reward history + recent activity for social proof
+  - **Intermediary layer**: `src/services/rechargeService.ts` returns hardcoded data that mirrors the expected Recharge JSON structure.
+
+- **Structural & commercial enhancements implemented**
+  - **Progressive disclosure**: `ProgressTracker` shows the flow step-by-step.
+  - **One-click sharing**: `CopyLinkWidget` includes clipboard copy + Web Share API (mobile WhatsApp/iMessage share).
+  - **Social proof**: `SocialProof` rotates “recently earned” style activity + community totals.
+  - **Immediate value clarity**: `RewardDashboard` shows **Friend’s Reward** and **Your Reward** side-by-side plus **Available vs Pending** credits.
+  - **Lead capture**: `EmailInviteTool` provides in-page invites (CRM capture path).
+
+### 3) Test — what to A/B test first, metrics, and success at 30/90 days
+
+#### A/B tests (highest impact first)
+
+- **Primary CTA**
+  - Variant A: “Copy link”
+  - Variant B: “Share now” (Web Share first on mobile, copy secondary)
+  - Metric focus: share initiation rate, referral link clicks
+
+- **Value proposition framing**
+  - Variant A: “Give 20%, Get £20”
+  - Variant B: “Give 20%, Get 20%”
+  - Metric focus: referral-start and conversion downstream
+
+- **Progress + gamification**
+  - Show reward dashboard above the fold vs below
+  - Metric focus: repeat shares per referrer, second referral rate
+
+- **Social proof**
+  - Ticker visible by default vs collapsed
+  - Metric focus: CTA click-through, session-to-share conversion
+
+#### Metrics that matter
+
+- **Activation**
+  - Referral page CTR from account / post-purchase touchpoints
+  - Share initiation rate (copy/share button clicks)
+  - Referral link clicks per referrer
+
+- **Conversion**
+  - Friend checkout conversion rate (new customer only)
+  - First-order AOV and subscription conversion (if applicable)
+
+- **Loop / retention**
+  - Successful referrals per active referrer
+  - Time-to-first-successful-referral
+  - Repeat share rate (users who share again within 7/30 days)
+
+- **Operational**
+  - Fraud/abuse signals (self-referrals, duplicate emails, coupon abuse)
+
+#### What success looks like
+
+- **30 days**
+  - Higher share initiation and referral link clicks vs baseline
+  - Measurable lift in new-customer first orders attributed to referrals
+  - Early signal of repeat sharing behavior (referrers sharing multiple times)
+
+- **90 days**
+  - Sustained improvement in successful referrals per referrer
+  - Meaningful share of new customers coming through referrals
+  - Stronger repeat referral loop (more multi-referrers, lower time-to-success)
+
 ## Quick Start
 
 ```bash
